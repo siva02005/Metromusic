@@ -21,6 +21,8 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
 
       - name: Build Debug APK
         run: gradle :app:assembleDebug --no-daemon
@@ -44,6 +46,8 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
 
       - name: Build Desktop JAR
         run: gradle :desktopApp:packageUberJarForCurrentOS --no-daemon
@@ -78,13 +82,10 @@ jobs:
           name: Metromusic v1.0.0
           body: |
             ## Metromusic v1.0.0
-
             Open-source music player for **Android** and **Windows/Desktop**.
-
             ### Downloads
             - **Android:** Install `app-debug.apk` on your Android device
             - **Desktop:** Run `java -jar metromusic-desktop.jar` on Windows/Linux/Mac
-
             ### Features
             - Global music catalog via Piped API
             - 200% Volume Boost with speaker protection

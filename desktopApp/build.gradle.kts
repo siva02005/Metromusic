@@ -3,7 +3,6 @@ plugins {
     id("org.jetbrains.compose")
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")
-    application
 }
 
 dependencies {
@@ -27,12 +26,6 @@ compose.desktop {
             packageVersion = "1.0.0"
             description = "Metromusic - Open Source Music Player"
             vendor = "Metromusic"
-
-            windows {
-                menuGroup = "Metromusic"
-                upgradeUuid = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-                iconFile.set(project.file("icon.ico"))
-            }
         }
     }
 }
