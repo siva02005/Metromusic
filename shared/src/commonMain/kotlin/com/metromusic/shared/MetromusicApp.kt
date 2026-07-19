@@ -1,7 +1,6 @@
 package com.metromusic.shared
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -27,11 +26,14 @@ import com.metromusic.shared.ui.home.HomeScreen
 import com.metromusic.shared.ui.library.LibraryScreen
 import com.metromusic.shared.ui.player.PlayerScreen
 import com.metromusic.shared.ui.search.SearchScreen
+import com.metromusic.shared.ui.settings.SettingsScreen
+import com.metromusic.shared.ui.theme.ThemeMode
 
 expect fun homeIcon(): ImageVector
 expect fun searchIcon(): ImageVector
 expect fun friendsIcon(): ImageVector
 expect fun libraryIcon(): ImageVector
+expect fun settingsIcon(): ImageVector
 
 data class NavItem(val label: String, val icon: ImageVector)
 
@@ -40,6 +42,7 @@ fun MetromusicApp(
     trendingTracks: List<Track>,
     searchResults: List<Track>,
     isLoading: Boolean,
+    errorMessage: String?,
     currentTrack: Track?,
     isPlaying: Boolean,
     positionMs: Long,
@@ -50,7 +53,16 @@ fun MetromusicApp(
     onNext: () -> Unit,
     onPrevious: () -> Unit,
     onSeek: (Long) -> Unit,
-    searchQuery: String
+    onRetry: () -> Unit,
+    searchQuery: String,
+    currentThemeMode: ThemeMode,
+    onThemeModeChange: (ThemeMode) -> Unit,
+    currentPipedInstance: String,
+    onPipedInstanceChange: (String) -> Unit,
+    volumeBoostEnabled: Boolean,
+    onVolumeBoostChange: (Boolean) -> Unit,
+    spatialPreset: String,
+    onSpatialPresetChange: (String) -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     var showPlayer by remember { mutableStateOf(false) }
@@ -63,7 +75,8 @@ fun MetromusicApp(
         NavItem("Home", homeIcon()),
         NavItem("Search", searchIcon()),
         NavItem("FriendsZone", friendsIcon()),
-        NavItem("Library", libraryIcon())
+        NavItem("Library", libraryIcon()),
+        NavItem("Settings", settingsIcon())
     )
 
     if (showPlayer) {
@@ -97,10 +110,12 @@ fun MetromusicApp(
                 when (selectedTab) {
                     0 -> HomeScreen(
                         tracks = trendingTracks,
+                        errorMessage = errorMessage,
                         onTrackClick = {
                             onTrackClick(it)
                             showPlayer = true
-                        }
+                        },
+                        onRetry = onRetry
                     )
                     1 -> SearchScreen(
                         searchResults = searchResults,
@@ -127,9 +142,19 @@ fun MetromusicApp(
                             showPlayer = true
                         }
                     )
+                    4 -> SettingsScreen(
+                        currentThemeMode = currentThemeMode,
+                        onThemeModeChange = onThemeModeChange,
+                        currentPipedInstance = currentPipedInstance,
+                        onPipedInstanceChange = onPipedInstanceChange,
+                        volumeBoostEnabled = volumeBoostEnabled,
+                        onVolumeBoostChange = onVolumeBoostChange,
+                        spatialPreset = spatialPreset,
+                        onSpatialPresetChange = onSpatialPresetChange
+                    )
                 }
 
-                if (currentTrack != null) {
+                if (currentTrack != null && selectedTab != 4) {
                     MiniPlayerBar(
                         track = currentTrack,
                         isPlaying = isPlaying,

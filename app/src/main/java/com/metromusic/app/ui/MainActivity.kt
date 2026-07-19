@@ -6,9 +6,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.*
 import com.metromusic.shared.MetromusicApp
+import com.metromusic.shared.data.local.SettingsStore
 import com.metromusic.shared.data.remote.api.PipedApi
+import com.metromusic.shared.data.remote.api.PipedApiRegistry
 import com.metromusic.shared.data.repository.MusicRepositoryImpl
 import com.metromusic.shared.domain.model.Track
+import com.metromusic.shared.ui.theme.MetromusicTheme
+import com.metromusic.shared.ui.theme.ThemeMode
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -22,6 +26,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        val settingsStore = SettingsStore(applicationContext)
         val client = HttpClient(OkHttp) {
             install(ContentNegotiation) {
                 json(Json {
@@ -30,7 +35,11 @@ class MainActivity : ComponentActivity() {
                 })
             }
         }
-        val repository = MusicRepositoryImpl(PipedApi(client))
+
+        val savedInstance = settingsStore.getPipedInstance()
+        val baseUrl = if (savedInstance.isNotEmpty()) savedInstance else PipedApiRegistry.FALLBACK_INSTANCES.first()
+        val pipedApi = PipedApi(client, baseUrl)
+        val repository = MusicRepositoryImpl(pipedApi)
 
         setContent {
             val scope = rememberCoroutineScope()
@@ -42,37 +51,89 @@ class MainActivity : ComponentActivity() {
             var isPlaying by remember { mutableStateOf(false) }
             var positionMs by remember { mutableStateOf(0L) }
             var durationMs by remember { mutableStateOf(0L) }
+            var errorMessage by remember { mutableStateOf<String?>(null) }
 
-            LaunchedEffect(Unit) {
-                launch(Dispatchers.IO) { trending = repository.getTrending() }
+            var themeMode by remember {
+                mutableStateOf(
+                    when (settingsStore.getThemeMode()) {
+                        "light" -> ThemeMode.LIGHT
+                        "dark" -> ThemeMode.DARK
+                        else -> ThemeMode.SYSTEM
+                    }
+                )
             }
+            var volumeBoost by remember { mutableStateOf(settingsStore.getVolumeBoost()) }
+            var spatialPreset by remember { mutableStateOf(settingsStore.getSpatialAudioPreset()) }
+
+            val loadTrending: () -> Unit = {
+                scope.launch(Dispatchers.IO) {
+                    try {
+                        errorMessage = null
+                        trending = repository.getTrending()
+                        if (trending.isEmpty()) {
+                            errorMessage = "No music found. Check your connection or try a different source in Settings."
+                        }
+                    } catch (e: Exception) {
+                        errorMessage = "Failed to load: ${e.message ?: "Unknown error"}. Try another source in Settings."
+                    }
+                }
+            }
+
+            LaunchedEffect(Unit) { loadTrending() }
 
             LaunchedEffect(searchQuery) {
                 if (searchQuery.isNotBlank()) {
                     launch(Dispatchers.IO) {
                         isLoading = true
-                        searchResults = repository.search(searchQuery).tracks
+                        try {
+                            searchResults = repository.search(searchQuery).tracks
+                        } catch (_: Exception) {}
                         isLoading = false
                     }
                 }
             }
 
-            MetromusicApp(
-                trendingTracks = trending,
-                searchResults = searchResults,
-                isLoading = isLoading,
-                currentTrack = currentTrack,
-                isPlaying = isPlaying,
-                positionMs = positionMs,
-                durationMs = durationMs,
-                onSearchQueryChange = { searchQuery = it },
-                onTrackClick = { currentTrack = it },
-                onPlayPause = { isPlaying = !isPlaying },
-                onNext = {},
-                onPrevious = {},
-                onSeek = { positionMs = it },
-                searchQuery = searchQuery
-            )
+            MetromusicTheme(themeMode = themeMode) {
+                MetromusicApp(
+                    trendingTracks = trending,
+                    searchResults = searchResults,
+                    isLoading = isLoading,
+                    errorMessage = errorMessage,
+                    currentTrack = currentTrack,
+                    isPlaying = isPlaying,
+                    positionMs = positionMs,
+                    durationMs = durationMs,
+                    onSearchQueryChange = { searchQuery = it },
+                    onTrackClick = { currentTrack = it },
+                    onPlayPause = { isPlaying = !isPlaying },
+                    onNext = {},
+                    onPrevious = {},
+                    onSeek = { positionMs = it },
+                    onRetry = { loadTrending() },
+                    searchQuery = searchQuery,
+                    currentThemeMode = themeMode,
+                    onThemeModeChange = { mode ->
+                        themeMode = mode
+                        settingsStore.setThemeMode(mode.name.lowercase())
+                    },
+                    currentPipedInstance = pipedApi.getBaseUrl(),
+                    onPipedInstanceChange = { url ->
+                        pipedApi.setBaseUrl(url)
+                        settingsStore.setPipedInstance(url)
+                        loadTrending()
+                    },
+                    volumeBoostEnabled = volumeBoost,
+                    onVolumeBoostChange = {
+                        volumeBoost = it
+                        settingsStore.setVolumeBoost(it)
+                    },
+                    spatialPreset = spatialPreset,
+                    onSpatialPresetChange = { preset ->
+                        spatialPreset = preset
+                        settingsStore.setSpatialAudioPreset(preset)
+                    }
+                )
+            }
         }
     }
 }

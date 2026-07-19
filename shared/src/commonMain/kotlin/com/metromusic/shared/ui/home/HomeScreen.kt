@@ -3,18 +3,24 @@ package com.metromusic.shared.ui.home
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.metromusic.shared.domain.model.Track
 import com.metromusic.shared.ui.components.TrackItem
@@ -23,7 +29,9 @@ import com.metromusic.shared.ui.components.TrackItem
 @Composable
 fun HomeScreen(
     tracks: List<Track>,
-    onTrackClick: (Track) -> Unit
+    errorMessage: String? = null,
+    onTrackClick: (Track) -> Unit,
+    onRetry: () -> Unit = {}
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
@@ -53,11 +61,38 @@ fun HomeScreen(
                 )
             }
 
-            items(tracks, key = { it.id }) { track ->
-                TrackItem(track = track, onClick = { onTrackClick(track) })
-            }
-
-            if (tracks.isEmpty()) {
+            if (errorMessage != null && tracks.isEmpty()) {
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Spacer(modifier = Modifier.height(32.dp))
+                        Text(
+                            text = "Could not load music",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = errorMessage,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                        Button(
+                            onClick = onRetry,
+                            modifier = Modifier.padding(top = 16.dp),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("Retry")
+                        }
+                    }
+                }
+            } else if (tracks.isEmpty()) {
                 item {
                     Text(
                         text = "Loading trending music...",
@@ -65,6 +100,10 @@ fun HomeScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(32.dp)
                     )
+                }
+            } else {
+                items(tracks, key = { it.id }) { track ->
+                    TrackItem(track = track, onClick = { onTrackClick(track) })
                 }
             }
         }
