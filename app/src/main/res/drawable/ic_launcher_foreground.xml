@@ -1,0 +1,25 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Metro "M" logo with music note integration -->
+    <!-- Background circle -->
+    <path
+        android:fillColor="#6C63FF"
+        android:pathData="M54,54m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0" />
+
+    <!-- Stylized "M" shape -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,68L30,40L38,40L38,62L46,40L54,40L62,40L70,40L70,68L64,68L64,50L56,50L54,56L52,50L44,50L44,68Z" />
+
+    <!-- Music note accent -->
+    <path
+        android:fillColor="#FF6B9D"
+        android:pathData="M66,34m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0" />
+    <path
+        android:fillColor="#FF6B9D"
+        android:pathData="M71,34L71,44L73,44L73,34Z" />
+</vector>
