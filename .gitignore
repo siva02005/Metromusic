@@ -2,7 +2,6 @@
 *.apk
 *.aab
 *.ap_
-*.aab
 
 # Files for the ART/Dalvik VM
 *.dex
@@ -22,17 +21,13 @@ build/
 # Local configuration file
 local.properties
 
-# Android Studio Navigation editor temp files
+# Android Studio
 .navigation/
-
-# Android Studio captures folder
 captures/
-
-# IntelliJ
 *.iml
 .idea/
 
-# External native build folder generated in Android Studio 2.2 and later
+# External native build
 .externalNativeBuild/
 .cxx/
 
@@ -47,18 +42,19 @@ google-services.json
 .DS_Store
 Thumbs.db
 
-# Node
-node_modules/
-
 # Kotlin
 *.kotlin_module
 
-# Room
+# Room schema
 schema/
 
-# Proguard
-proguard/
-
-# Build outputs
+# Compose Desktop
+desktopApp/build/
+shared/build/
 app/build/
-/app/build/
+
+# iOS
+iosApp/build/
+*.xcuserdata
+DerivedData/
+Pods/
