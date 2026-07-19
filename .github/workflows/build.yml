@@ -22,6 +22,9 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Generate Gradle Wrapper
+        run: gradle wrapper --gradle-version 8.11.1
+
       - name: Build Debug APK
         run: ./gradlew :app:assembleDebug
 
@@ -32,7 +35,7 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
 
   build-desktop:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -45,14 +48,17 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build Windows Desktop
-        run: .\gradlew :desktopApp:packageMsi
+      - name: Generate Gradle Wrapper
+        run: gradle wrapper --gradle-version 8.11.1
 
-      - name: Upload Windows Installer
+      - name: Build Desktop JAR
+        run: ./gradlew :desktopApp:packageUberJarForCurrentOS
+
+      - name: Upload Desktop JAR
         uses: actions/upload-artifact@v4
         with:
-          name: metromusic-windows
-          path: desktopApp/build/compose/binaries/main/msi/*.msi
+          name: metromusic-desktop
+          path: desktopApp/build/compose/jars/*.jar
 
   create-release:
     needs: [build-android, build-desktop]
@@ -65,10 +71,10 @@ jobs:
           name: metromusic-android
           path: ./artifacts
 
-      - name: Download Windows MSI
+      - name: Download Desktop JAR
         uses: actions/download-artifact@v4
         with:
-          name: metromusic-windows
+          name: metromusic-desktop
           path: ./artifacts
 
       - name: Create GitHub Release
@@ -79,11 +85,11 @@ jobs:
           body: |
             ## Metromusic v1.0.0
 
-            Open-source music player for **Android** and **Windows**.
+            Open-source music player for **Android** and **Windows/Desktop**.
 
             ### Downloads
             - **Android:** Install `app-debug.apk` on your Android device
-            - **Windows:** Run the `.msi` installer
+            - **Desktop:** Run `java -jar metromusic-desktop.jar` on Windows/Linux/Mac
 
             ### Features
             - Global music catalog via Piped API
@@ -93,7 +99,7 @@ jobs:
             - Material You dynamic theming
           files: |
             artifacts/app-debug.apk
-            artifacts/*.msi
+            artifacts/*.jar
           draft: false
           prerelease: false
         env:
