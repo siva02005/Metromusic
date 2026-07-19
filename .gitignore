@@ -58,3 +58,6 @@ iosApp/build/
 *.xcuserdata
 DerivedData/
 Pods/
+
+# CI artifacts
+artifacts/
