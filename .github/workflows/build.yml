@@ -61,7 +61,7 @@ jobs:
   create-release:
     needs: [build-android, build-desktop]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/master'
     steps:
       - name: Download Android APK
         uses: actions/download-artifact@v4
